@@ -24,7 +24,7 @@ export function buildTwitterOAuthUrl(): { url: string; state: string; verifier: 
   }
 
   const { verifier, challenge, state } = createPkce();
-  const url = new URL('https://twitter.com/i/oauth2/authorize');
+  const url = new URL('https://x.com/i/oauth2/authorize');
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('client_id', cfg.clientId);
   url.searchParams.set('redirect_uri', cfg.callbackUrl);
@@ -79,7 +79,7 @@ async function exchangeCodeForToken(code: string, verifier: string): Promise<XOA
 export async function saveTwitterOAuthToken(token: XOAuthTokenSet): Promise<string> {
   ensureDataDir();
   const tokenPath = twitterOauthTokenPath();
-  await writeJson(tokenPath, token);
+  await writeJson(tokenPath, token, { mode: 0o600 });
   // Restrict permissions — OAuth tokens should only be readable by the owner
   const { chmod } = await import('node:fs/promises');
   await chmod(tokenPath, 0o600);

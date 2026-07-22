@@ -5,12 +5,16 @@ export interface BookmarkMediaVariant {
 }
 
 export interface BookmarkMediaObject {
+  url?: string;
   mediaUrl?: string;
+  expandedUrl?: string;
   previewUrl?: string;
   type?: string;
+  altText?: string;
   extAltText?: string;
   width?: number;
   height?: number;
+  videoVariants?: BookmarkMediaVariant[];
   variants?: BookmarkMediaVariant[];
 }
 
@@ -36,6 +40,18 @@ export interface BookmarkEngagementSnapshot {
   viewCount?: number;
 }
 
+export interface QuotedTweetSnapshot {
+  id: string;
+  text: string;
+  authorHandle?: string;
+  authorName?: string;
+  authorProfileImageUrl?: string;
+  postedAt?: string | null;
+  media?: string[];
+  mediaObjects?: BookmarkMediaObject[];
+  url: string;
+}
+
 export interface BookmarkRecord {
   id: string;
   tweetId: string;
@@ -47,11 +63,18 @@ export interface BookmarkRecord {
   text: string;
   postedAt?: string | null;
   bookmarkedAt?: string | null;
+  /** X's opaque bookmark ordering key. Useful for chronology, not timestamps. */
+  sortIndex?: string | null;
   syncedAt: string;
   conversationId?: string;
   inReplyToStatusId?: string;
   inReplyToUserId?: string;
   quotedStatusId?: string;
+  quotedTweet?: QuotedTweetSnapshot;
+  articleTitle?: string | null;
+  articleText?: string | null;
+  articleSite?: string | null;
+  enrichedAt?: string | null;
   language?: string;
   sourceApp?: string;
   possiblySensitive?: boolean;
@@ -61,6 +84,27 @@ export interface BookmarkRecord {
   links?: string[];
   tags?: string[];
   ingestedVia?: 'api' | 'browser' | 'graphql';
+  /** Parallel arrays of folder IDs and display names this bookmark is in on X. */
+  folderIds?: string[];
+  folderNames?: string[];
+  /**
+   * Set once `ft sync --gaps` has attempted to expand long-form text for this
+   * record. Present regardless of whether expansion actually lengthened the
+   * stored text — its purpose is to keep the gap-fill selector idempotent so
+   * subsequent runs don't re-fetch the same records forever.
+   */
+  textExpandedAt?: string;
+  /**
+   * Set when gap-fill tried to backfill the quoted tweet for this record and
+   * failed permanently (deleted, forbidden, empty body). Prevents retrying the
+   * same dead tweet on every run.
+   */
+  quotedTweetFailedAt?: string;
+}
+
+export interface BookmarkFolder {
+  id: string;
+  name: string;
 }
 
 export interface BookmarkCacheMeta {
@@ -88,4 +132,6 @@ export interface BookmarkBackfillState {
   lastAdded: number;
   lastSeenIds: string[];
   stopReason?: string;
+  /** Saved pagination cursor for resuming an interrupted sync. */
+  lastCursor?: string;
 }
